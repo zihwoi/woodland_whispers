@@ -24,6 +24,7 @@ spreading love to you who is also learning and hiking your way up! 🌞🥗💗�
 
 
 # Woodland Whispers Adventure
+![Image](https://github.com/user-attachments/assets/c0f4546e-703d-4fe7-8feb-bef39660fc07)
 
 A simple text-based adventure game featuring cute woodland creatures with ASCII art. 
 Help the forest animals solve their problems and discover the secrets of the Woodland!
