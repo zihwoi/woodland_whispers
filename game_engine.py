@@ -9,6 +9,7 @@ def play_sound(pickup):
         sound.play()
     except:
         pass  # Silently fail if sound file not found 
+    
 class GameEngine:
     def __init__(self):
         self.locations = {}
