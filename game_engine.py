@@ -1,6 +1,6 @@
 from colorama import init, Fore, Back, Style
 import pygame
-import os
+import os, random
 
 def play_sound(pickup):
     try:
@@ -18,6 +18,12 @@ class GameEngine:
         self.player_location = None
         self.player_inventory = []
         self.game_running = True
+        self.weather = "sunny"
+        self.time_of_day = "morning"
+        self.turns = 0
+        self.weather_types = ["sunny", "cloudy", "rainy", "foggy"]
+        self.times_of_day = ["morning", "afternoon", "evening", "night"]
+        self.puzzles = {}
         pygame.mixer.init()
 
     def add_location(self, location):
@@ -40,10 +46,12 @@ class GameEngine:
         else:
             print(f"You can't go {direction} from here.")
             return False
+        
 
     def look(self):
         location = self.locations[self.player_location]
         print(f"\n{Fore.CYAN}{Style.BRIGHT}=== {location.name} ==={Style.RESET_ALL}")
+        print(f"{Fore.CYAN}It's {self.time_of_day} and the weather is {self.weather}.")
         print(f"{Fore.WHITE}{location.description}")
         
         # Show characters
@@ -88,6 +96,39 @@ class GameEngine:
                 print(f"- {item}")
         else:
             print("\nYour inventory is empty.")
+            
+    def show_map(self):
+        current_loc = self.player_location
+        
+        forest_map = [
+            "    [Old Oak]    ",
+            "        |        ",
+            "        |        ",
+            "[Berry]--[Clearing]--[Stream]",
+            "                 ",
+            "                 ",
+            "  [Hidden Grove] ",
+            "  (if discovered)",
+        ]
+        
+        highlighted_map = []
+        for line in forest_map:
+            if f"[{current_loc}]" in line:
+                new_line = line.replace(f"[{current_loc}]", f"{Fore.GREEN}[{current_loc}]{Style.RESET_ALL}")
+            else:
+                new_line = line
+            highlighted_map.append(new_line)
+        
+        if "Hidden Grove" not in self.locations[current_loc].connections.values() and current_loc != "Hidden Grove":
+            highlighted_map[6] = "                 "
+            highlighted_map[7] = "                 "
+        
+        print("\n=== Forest Map ===")
+        for line in highlighted_map:
+            print(line)
+        print("=================")
+        
+    
 
     def talk_to_character(self, character_name):
         char_found = None
@@ -133,6 +174,31 @@ class GameEngine:
         else:
             print(f"You don't have a {item_name} to use.")
         return False
+    
+    def add_puzzle(self, puzzle):
+        self.puzzles[puzzle.name] = puzzle
+
+    def solve_puzzle(self, puzzle_name, answer):
+        if puzzle_name in self.puzzles:
+            puzzle = self.puzzles[puzzle_name]
+            if not puzzle.solved:
+                if answer.lower() == puzzle.answer:
+                    print(f"\n{Fore.GREEN}Correct! You solved the {puzzle_name}!")
+                    puzzle.solved = True
+                    if puzzle.reward:
+                        print(f"{Fore.YELLOW}You receive: {puzzle.reward}")
+                        self.player_inventory.append(puzzle.reward)
+                        play_sound("success")
+                    return True
+                else:
+                    print(f"\n{Fore.RED}That's not the correct answer to the {puzzle_name}.")
+                    return False
+            else:
+                print(f"\nYou've already solved the {puzzle_name}.")
+                return True
+        else:
+            print(f"\nThere's no puzzle called {puzzle_name} here.")
+            return False
 
     def process_command(self, command):
         cmd_parts = command.lower().split()
@@ -140,6 +206,8 @@ class GameEngine:
             return
             
         action = cmd_parts[0]
+        
+        self.update_environment()
         
         # Movement commands
         if action in ['north', 'south', 'east', 'west', 'n', 's', 'e', 'w']:
@@ -184,9 +252,20 @@ class GameEngine:
             confirm = input("Are you sure you want to quit? (y/n): ")
             if confirm.lower() == 'y':
                 self.game_running = False
-                
+        
+        # Map command   
+        elif action == 'map':
+            self.show_map()
+        
+        elif action == 'solve' and len(cmd_parts) > 2:
+            puzzle_name = cmd_parts[1]
+            answer = ' '.join(cmd_parts[2:])
+            self.solve_puzzle(puzzle_name, answer)
+            
         else:
             print("I don't understand that command. Type 'help' for a list of commands.")   
+            
+            
 
     def show_help(self):
         print("\n=== COMMANDS ===")
@@ -210,4 +289,21 @@ class GameEngine:
         while self.game_running:
             command = input("\n> ")
             self.process_command(command)
+            
+    def update_environment(self):
+        self.turns += 1
+        
+        # Change time of day every 5 turns
+        if self.turns % 5 == 0:
+            current_index = self.times_of_day.index(self.time_of_day)
+            self.time_of_day = self.times_of_day[(current_index + 1) % len(self.times_of_day)]
+            print(f"\n{Fore.CYAN}The time changes to {self.time_of_day}.")
+        
+        # Random chance of weather change (20%)
+        if random.random() < 0.2:
+            new_weather = random.choice(self.weather_types)
+            if new_weather != self.weather:
+                self.weather = new_weather
+                print(f"\n{Fore.CYAN}The weather changes to {self.weather}.")
+    
         

@@ -6,6 +6,9 @@ import ascii_art
 import time
 
 from colorama import init, Fore, Back, Style
+
+from puzzles import Puzzle
+
 init(autoreset=True)  # Initialize colorama
 
 
@@ -58,6 +61,13 @@ def setup_game():
     
     owl = Character("Owl", "Old Oak", ascii_art.OWL, 
                   "Hoot! I've lived in this forest for 100 years. I know all its secrets.")
+    owl.dialogue = "Hoot! I love riddles. Would you like to hear one? Type 'solve owl's riddle [your answer]' to solve it."
+    
+    owl_riddle = Puzzle("owl's riddle", 
+            "I'm tall when I'm young, and short when I'm old. What am I?", 
+            "candle", "magic_feather")
+    
+    game.add_puzzle(owl_riddle)
     
     squirrel = Character("Squirrel", "Hidden Grove", ascii_art.SQUIRREL, 
                        "You found my secret grove! Not many visitors make it here.")
